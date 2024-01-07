@@ -106,21 +106,30 @@ def get_min_location(lines):
 
 def split_range(source_range, mapper):
     lower, upper = source_range
-    split_points = [get_map_output(lower, mapper), get_map_output(upper, mapper)]
+    split_points = [get_map_output(lower, mapper)]
     # split_points = [lower, upper]
-    for entry in mapper:
-        if lower < entry["source_start"] and upper >= entry["source_start"]:
-            # print(lower, "--->", entry["source_start"], "--->", upper)
-            split_value = get_map_output(entry["source_start"], mapper)
-            # split_value = entry["source_start"]
-            split_points += [split_value, split_value + 1]
-        if lower <= entry["source_end"] and upper > entry["source_end"]:
-            # print(lower, "--->", entry["source_end"], "--->", upper)
-            # split_value = entry["source_end"]
+    added = set()
+    for entry in sorted(mapper, key=lambda x: x['source_start']):
+        if lower < entry["source_start"] and upper > entry["source_start"]:
+            split_point = [
+                get_map_output(entry["source_start"] - 1, mapper) + 1,
+                get_map_output(entry["source_start"], mapper),
+            ]
+            if tuple(split_point) not in added:
+                split_points += split_point
+                added.add(tuple(split_point))
+        if lower < entry["source_end"] and upper > entry["source_end"]:            
             split_value = get_map_output(entry["source_end"], mapper)
-            split_points += [split_value, split_value + 1]
+            split_point = [
+                get_map_output(entry["source_end"] - 1, mapper) + 1, 
+                get_map_output(entry["source_end"], mapper),
+            ]
+            if tuple(split_point) not in added:
+                split_points += split_point
+                added.add(tuple(split_point))
             
-    split_points = sorted(list(set(split_points)))
+    split_points.append(get_map_output(upper - 1, mapper) + 1)
+
     return [(split_points[i], split_points[i + 1]) for i in range(0,
     len(split_points), 2)]
 
@@ -138,19 +147,14 @@ def get_range_lookup(lines):
         "temperature-to-humidity",
         "humidity-to-location",
     ]    
-    print("seeds")
-    print(ranges)
     for map_name in map_names:
         new_ranges = []
-        # split ranges
         for r in ranges:
             new_ranges += split_range(r, maps[map_name])
-            # ranges = [(get_map_output(p[0], mapper), get_map_output(p[1], mapper)) for p in split_points])
-            # print('before', ranges)
-            # print('after', [(get_map_output(p[0], mapper), get_map_output(p[1], mapper)) for p in split_points])
         ranges = sorted(new_ranges)
-        print(map_name)
-        print(ranges)
+
+    return ranges[0][0]
+
 
 def main():
     print("sample 1:", get_min_location(sample))
@@ -159,7 +163,7 @@ def main():
     with open("inputs/day_5.txt") as f:
         lines = f.readlines()
     print("part 1:", get_min_location(lines))
-
+    print("part 2:", get_range_lookup(lines))
 
 if __name__ == "__main__":
     main()
