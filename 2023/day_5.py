@@ -153,17 +153,20 @@ def get_range_lookup(lines):
             new_ranges += split_range(r, maps[map_name])
         ranges = sorted(new_ranges)
 
-    return ranges[0][0]
+    return ranges
+
+def get_min_range_location(lines):
+    return get_range_lookup(lines)[0][0]
 
 
 def main():
     print("sample 1:", get_min_location(sample))
-    print("sample 2:", get_range_lookup(sample))
+    print("sample 2:", get_min_range_location(sample))
 
     with open("inputs/day_5.txt") as f:
         lines = f.readlines()
     print("part 1:", get_min_location(lines))
-    print("part 2:", get_range_lookup(lines))
+    print("part 2:", get_min_range_location(lines))
 
 if __name__ == "__main__":
     main()
